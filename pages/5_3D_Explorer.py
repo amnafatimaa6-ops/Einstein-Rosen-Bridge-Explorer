@@ -14,36 +14,21 @@ Features:
 
 
 import streamlit as st
-import numpy as np
 import pyvista as pv
 
 from stpyvista import stpyvista
 
 
-from utils.wormholes import (
-    einstein_rosen_bridge
-)
-
-from utils.event_horizon import (
-    create_event_horizon
-)
-
-from utils.stars import (
-    generate_stars
-)
-
-from utils.slicing import (
-    slice_mesh
-)
-
-from utils.metrics import (
-    throat_metrics
-)
+from utils.wormholes import einstein_rosen_bridge
+from utils.event_horizon import create_event_horizon
+from utils.stars import generate_stars
+from utils.slicing import slice_mesh
+from utils.metrics import throat_metrics
 
 
 
 ############################################################
-# STREAMLIT SETTINGS
+# PAGE CONFIG
 ############################################################
 
 st.set_page_config(
@@ -100,7 +85,7 @@ Modify parameters live.
 
 
 ############################################################
-# SIDEBAR CONTROLS
+# CONTROLS
 ############################################################
 
 st.sidebar.header(
@@ -111,7 +96,7 @@ st.sidebar.header(
 
 throat_radius = st.sidebar.slider(
 
-    "Wormhole throat radius",
+    "Throat radius",
 
     1.0,
 
@@ -163,7 +148,7 @@ show_horizon = st.sidebar.checkbox(
 
 show_stars = st.sidebar.checkbox(
 
-    "Show Star Field",
+    "Show Stars",
 
     True
 
@@ -171,7 +156,7 @@ show_stars = st.sidebar.checkbox(
 
 
 
-slice_enabled = st.sidebar.checkbox(
+enable_slice = st.sidebar.checkbox(
 
     "Enable Slice",
 
@@ -201,18 +186,17 @@ slice_position = st.sidebar.slider(
 
 plotter = pv.Plotter(
 
-    window_size=[900,700],
+    off_screen=True,
 
-    off_screen=True
+    window_size=(900,700)
 
 )
 
 
 
 ############################################################
-# GENERATE WORMHOLE
+# WORMHOLE
 ############################################################
-
 
 wormhole = einstein_rosen_bridge(
 
@@ -232,22 +216,20 @@ plotter.add_mesh(
 
     color="cyan",
 
-    smooth_shading=True,
-
     opacity=0.85,
 
-    name="wormhole"
+    smooth_shading=True
 
 )
 
 
 
 ############################################################
-# SLICE CONTROL
+# SLICE
 ############################################################
 
+if enable_slice:
 
-if slice_enabled:
 
     sliced = slice_mesh(
 
@@ -262,16 +244,9 @@ if slice_enabled:
 
         sliced,
 
-        color="yellow",
-
-        name="slice"
+        color="yellow"
 
     )
-
-
-
-
-
 
 
 
@@ -296,9 +271,7 @@ if show_horizon:
 
         color="black",
 
-        opacity=0.9,
-
-        name="event_horizon"
+        opacity=0.95
 
     )
 
@@ -325,9 +298,7 @@ if show_stars:
 
         color="white",
 
-        point_size=2,
-
-        name="stars"
+        point_size=2
 
     )
 
@@ -337,43 +308,29 @@ if show_stars:
 # LIGHTING
 ############################################################
 
-plotter.add_light(
+try:
 
-    pv.Light(
+    light = pv.Light()
 
-        position=(20,20,20),
+    light.position = (
 
-        focal_point=(0,0,0),
+        20,
 
-        intensity=1.5
+        20,
+
+        20
 
     )
 
-)
+    light.intensity = 1.5
 
 
+    plotter.add_light(
 
-############################################################
-# CAMERA SETUP
-############################################################
+        light
 
-plotter.camera_position = [
+    )
 
-    (30,30,20),   # camera location
-
-    (0,0,0),      # focus point
-
-    (0,0,1)       # up direction
-
-]
-
-
-
-# Streamlit Cloud compatible projection
-
-try:
-
-    plotter.enable_parallel_projection(False)
 
 except Exception:
 
@@ -382,16 +339,76 @@ except Exception:
 
 
 ############################################################
-# AXES
+# CAMERA
 ############################################################
 
-plotter.show_axes()
+plotter.camera_position = [
+
+    (
+
+        35,
+
+        35,
+
+        25
+
+    ),
+
+    (
+
+        0,
+
+        0,
+
+        0
+
+    ),
+
+    (
+
+        0,
+
+        0,
+
+        1
+
+    )
+
+]
 
 
 
 ############################################################
-# BACKGROUND
+# PROJECTION FIX
 ############################################################
+
+try:
+
+    plotter.enable_parallel_projection(
+
+        False
+
+    )
+
+except Exception:
+
+    pass
+
+
+
+############################################################
+# VIEW SETTINGS
+############################################################
+
+try:
+
+    plotter.show_axes()
+
+except Exception:
+
+    pass
+
+
 
 plotter.set_background(
 
@@ -402,22 +419,33 @@ plotter.set_background(
 
 
 ############################################################
-# DISPLAY
+# DISPLAY 3D VIEWER
 ############################################################
 
-
 st.subheader(
-    "3D Simulation"
-)
 
-
-stpyvista(
-
-    plotter,
-
-    key="wormhole_viewer"
+    "🌌 3D Wormhole Simulation"
 
 )
+
+
+
+try:
+
+    stpyvista(
+
+        plotter
+
+    )
+
+
+except Exception as e:
+
+    st.error(
+
+        f"3D rendering failed: {e}"
+
+    )
 
 
 
@@ -425,13 +453,15 @@ stpyvista(
 # METRICS
 ############################################################
 
-
 st.subheader(
+
     "Simulation Metrics"
+
 )
 
 
-metric_data = throat_metrics(
+
+metrics = throat_metrics(
 
     throat_radius,
 
@@ -441,39 +471,39 @@ metric_data = throat_metrics(
 
 
 
-col1,col2,col3 = st.columns(3)
+c1,c2,c3 = st.columns(3)
 
 
 
-with col1:
+with c1:
 
     st.metric(
 
         "Throat Radius",
 
-        f"{metric_data['throat_radius']:.2f}"
+        f"{metrics['throat_radius']:.2f}"
 
     )
 
 
 
-with col2:
+with c2:
 
     st.metric(
 
         "Curvature",
 
-        f"{metric_data['curvature']:.3f}"
+        f"{metrics['curvature']:.3f}"
 
     )
 
 
 
-with col3:
+with c3:
 
     st.metric(
 
-        "Geometry",
+        "Model",
 
         "Einstein-Rosen"
 
@@ -482,65 +512,69 @@ with col3:
 
 
 ############################################################
-# EXPORT HOOK
+# EXPORT
 ############################################################
 
 st.subheader(
+
     "Export"
+
 )
 
 
+
 if st.button(
-    "Save Screenshot"
+
+    "Capture Screenshot"
+
 ):
 
     try:
 
         plotter.screenshot(
 
-            "wormhole_simulation.png"
+            "wormhole.png"
 
         )
 
 
         st.success(
 
-            "Screenshot saved"
+            "Screenshot created"
 
         )
 
 
-    except Exception as e:
+    except Exception:
 
         st.warning(
 
-            "Screenshot unavailable on cloud renderer"
+            "Screenshot unavailable on cloud"
 
         )
 
 
 
 ############################################################
-# INFORMATION
+# DESCRIPTION
 ############################################################
 
 st.markdown(
 """
-### About this simulation
+## Physics
 
-This viewer generates the wormhole procedurally.
+This simulation generates the geometry procedurally.
 
 No image textures are used.
 
-The geometry is calculated from mathematical
-spacetime models and rendered as a real 3D object.
+The visualization includes:
 
-Included:
-
-- Einstein-Rosen bridge surface
-- Event horizon visualization
+- Einstein-Rosen bridge geometry
+- Event horizon
 - Procedural star field
-- Interactive camera
+- Interactive 3D camera
 - Spatial slicing
+
+The model is based on General Relativity solutions.
 """
 )
