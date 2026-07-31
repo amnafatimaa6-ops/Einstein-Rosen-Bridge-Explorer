@@ -1,266 +1,294 @@
+"""
+5_3D_Explorer.py
+
+Interactive 3D Einstein-Rosen Bridge Explorer
+
+Features:
+- PyVista 3D rendering
+- Wormhole geometry
+- Event horizon
+- Stars
+- Camera controls
+- Slicing
+"""
+
+
 import streamlit as st
 import numpy as np
 import pyvista as pv
+
 from stpyvista import stpyvista
 
-st.set_page_config(
-    page_title="3D Wormhole Explorer",
-    page_icon="🚀",
-    layout="wide"
+
+from utils.wormholes import (
+    einstein_rosen_bridge
 )
 
-st.title("🚀 Interactive 3D Wormhole Explorer")
+from utils.event_horizon import (
+    create_event_horizon
+)
 
-st.markdown("""
+from utils.stars import (
+    generate_stars
+)
+
+from utils.slicing import (
+    slice_mesh
+)
+
+from utils.metrics import (
+    throat_metrics
+)
+
+
+
+############################################################
+# STREAMLIT SETTINGS
+############################################################
+
+st.set_page_config(
+
+    page_title="3D Wormhole Explorer",
+
+    page_icon="🌌",
+
+    layout="wide"
+
+)
+
+
+
+############################################################
+# PYVISTA CLOUD SETTINGS
+############################################################
+
+pv.OFF_SCREEN = True
+
+
+try:
+
+    pv.global_theme.allow_empty_mesh = True
+
+except Exception:
+
+    pass
+
+
+
+############################################################
+# TITLE
+############################################################
+
+st.title(
+    "🚀 Interactive 3D Wormhole Explorer"
+)
+
+
+st.write(
+"""
 Explore an Einstein-Rosen Bridge in true 3D.
 
-Rotate
-
-Zoom
-
-Pan
-
-Inspect
+Rotate  
+Zoom  
+Pan  
+Inspect  
 
 Modify parameters live.
-""")
+"""
+)
 
-########################################################
-# SIDEBAR
-########################################################
 
-st.sidebar.header("Geometry")
 
-mass = st.sidebar.slider(
-    "Black Hole Mass",
+############################################################
+# SIDEBAR CONTROLS
+############################################################
+
+st.sidebar.header(
+    "Simulation Controls"
+)
+
+
+
+throat_radius = st.sidebar.slider(
+
+    "Wormhole throat radius",
+
     1.0,
+
     10.0,
-    2.0,
-    0.1
+
+    3.0
+
 )
 
-radius = st.sidebar.slider(
-    "Maximum Radius",
-    8.0,
-    25.0,
-    15.0,
-    0.5
+
+
+bridge_length = st.sidebar.slider(
+
+    "Bridge length",
+
+    5.0,
+
+    30.0,
+
+    15.0
+
 )
+
+
 
 resolution = st.sidebar.slider(
-    "Mesh Resolution",
-    80,
+
+    "Resolution",
+
+    50,
+
     300,
-    180,
-    10
-)
 
-########################################################
-
-st.sidebar.header("Appearance")
-
-surface_colour = st.sidebar.selectbox(
-
-    "Surface",
-
-    [
-
-        "viridis",
-
-        "plasma",
-
-        "inferno",
-
-        "turbo",
-
-        "coolwarm",
-
-        "cividis"
-
-    ]
+    150
 
 )
 
-opacity = st.sidebar.slider(
 
-    "Opacity",
 
-    0.2,
+show_horizon = st.sidebar.checkbox(
 
-    1.0,
+    "Show Event Horizon",
 
-    1.0,
-
-    0.05
+    True
 
 )
 
-wireframe = st.sidebar.checkbox(
 
-    "Wireframe",
+
+show_stars = st.sidebar.checkbox(
+
+    "Show Star Field",
+
+    True
+
+)
+
+
+
+slice_enabled = st.sidebar.checkbox(
+
+    "Enable Slice",
 
     False
 
 )
 
-show_axes = st.sidebar.checkbox(
 
-    "Show Axes",
 
-    True
+slice_position = st.sidebar.slider(
 
-)
+    "Slice position",
 
-show_grid = st.sidebar.checkbox(
+    -10.0,
 
-    "Show Grid",
+    10.0,
 
-    True
+    0.0
 
 )
 
-########################################################
 
-st.sidebar.header("Environment")
 
-background = st.sidebar.color_picker(
-
-    "Background",
-
-    "#000000"
-
-)
-
-stars = st.sidebar.checkbox(
-
-    "Stars",
-
-    True
-
-)
-
-event_horizon = st.sidebar.checkbox(
-
-    "Event Horizon",
-
-    True
-
-)
-
-lighting = st.sidebar.checkbox(
-
-    "Lighting",
-
-    True
-
-)
-
-########################################################
+############################################################
 # CREATE PLOTTER
-########################################################
+############################################################
 
 plotter = pv.Plotter(
-    window_size=(1300,800)
+
+    window_size=[900,700],
+
+    off_screen=True
+
 )
 
-plotter.set_background(background)
 
-if show_axes:
-    plotter.show_axes()
 
-if show_grid:
-    plotter.show_grid()
+############################################################
+# GENERATE WORMHOLE
+############################################################
 
-########################################################
-# GEOMETRY
-########################################################
 
-rs = 2 * mass
+wormhole = einstein_rosen_bridge(
 
-r = np.linspace(
-    rs + 0.01,
-    radius,
-    resolution
+    throat_radius=throat_radius,
+
+    length=bridge_length,
+
+    resolution=resolution
+
 )
 
-theta = np.linspace(
-    0,
-    2*np.pi,
-    resolution
-)
 
-R, T = np.meshgrid(
-    r,
-    theta
-)
-
-X = R*np.cos(T)
-
-Y = R*np.sin(T)
-
-Z = 2*np.sqrt(
-    rs*(R-rs)
-)
-
-upper = pv.StructuredGrid(
-    X,
-    Y,
-    Z
-)
-
-lower = pv.StructuredGrid(
-    X,
-    Y,
-    -Z
-)
-
-########################################################
-# SURFACES
-########################################################
 
 plotter.add_mesh(
 
-    upper,
+    wormhole,
 
-    cmap=surface_colour,
-
-    opacity=opacity,
+    color="cyan",
 
     smooth_shading=True,
 
-    show_edges=wireframe
+    opacity=0.85,
+
+    name="wormhole"
 
 )
 
-plotter.add_mesh(
 
-    lower,
 
-    cmap=surface_colour,
+############################################################
+# SLICE CONTROL
+############################################################
 
-    opacity=opacity,
 
-    smooth_shading=True,
+if slice_enabled:
 
-    show_edges=wireframe
+    sliced = slice_mesh(
 
-)
+        wormhole,
 
-########################################################
-# EVENT HORIZON
-########################################################
-
-if event_horizon:
-
-    horizon = pv.Sphere(
-
-        radius=rs,
-
-        theta_resolution=120,
-
-        phi_resolution=120
+        position=slice_position
 
     )
+
+
+    plotter.add_mesh(
+
+        sliced,
+
+        color="yellow",
+
+        name="slice"
+
+    )
+
+
+
+
+
+
+
+
+############################################################
+# EVENT HORIZON
+############################################################
+
+if show_horizon:
+
+    horizon = create_event_horizon(
+
+        radius=throat_radius * 0.5,
+
+        resolution=100
+
+    )
+
 
     plotter.add_mesh(
 
@@ -268,376 +296,251 @@ if event_horizon:
 
         color="black",
 
-        opacity=0.7,
+        opacity=0.9,
 
-        smooth_shading=True
+        name="event_horizon"
 
     )
 
-########################################################
+
+
+############################################################
 # STAR FIELD
-########################################################
+############################################################
 
-if stars:
+if show_stars:
 
-    pts = np.random.uniform(
+    stars = generate_stars(
 
-        -120,
+        count=1500,
 
-        120,
-
-        (7000,3)
+        radius=100
 
     )
 
-    cloud = pv.PolyData(pts)
 
-    plotter.add_mesh(
+    plotter.add_points(
 
-        cloud,
+        stars,
 
         color="white",
 
         point_size=2,
 
-        render_points_as_spheres=True
+        name="stars"
 
     )
 
-########################################################
+
+
+############################################################
 # LIGHTING
-########################################################
+############################################################
 
-if lighting:
+plotter.add_light(
 
-    light = pv.Light(
+    pv.Light(
 
-        position=(25,25,35),
-
-        focal_point=(0,0,0),
-
-        intensity=2.5
-
-    )
-
-    plotter.add_light(light)
-
-    light2 = pv.Light(
-
-        position=(-25,-25,20),
+        position=(20,20,20),
 
         focal_point=(0,0,0),
 
-        intensity=1.3
-
-    )
-########################################################
-# CAMERA CONTROLS
-########################################################
-
-st.sidebar.header("Camera")
-
-camera_distance = st.sidebar.slider(
-    "Camera Distance",
-    5.0,
-    40.0,
-    18.0,
-    0.5
-)
-
-camera_height = st.sidebar.slider(
-    "Camera Height",
-    -20.0,
-    20.0,
-    8.0,
-    0.5
-)
-
-camera_angle = st.sidebar.slider(
-    "Camera Angle",
-    0,
-    360,
-    45
-)
-
-orbit = st.sidebar.checkbox(
-    "Orbit Camera",
-    False
-)
-
-orbit_speed = st.sidebar.slider(
-    "Orbit Speed",
-    1,
-    20,
-    5
-)
-
-########################################################
-# CLIPPING PLANE
-########################################################
-
-st.sidebar.header("Cross Section")
-
-enable_clip = st.sidebar.checkbox(
-    "Enable Clipping Plane",
-    False
-)
-
-clip_axis = st.sidebar.selectbox(
-    "Axis",
-    ["X", "Y", "Z"]
-)
-
-clip_value = st.sidebar.slider(
-    "Plane Position",
-    -20.0,
-    20.0,
-    0.0,
-    0.25
-)
-
-########################################################
-# THROAT GLOW
-########################################################
-
-throat_glow = st.sidebar.checkbox(
-    "Glow at Throat",
-    True
-)
-
-if throat_glow:
-
-    glow = pv.Sphere(
-        radius=rs*1.1,
-        theta_resolution=100,
-        phi_resolution=100
-    )
-
-    plotter.add_mesh(
-        glow,
-        color="cyan",
-        opacity=0.12,
-        smooth_shading=True
-    )
-
-########################################################
-# CLIPPING
-########################################################
-
-if enable_clip:
-
-    origin = (0,0,0)
-
-    if clip_axis == "X":
-        normal = (1,0,0)
-
-    elif clip_axis == "Y":
-        normal = (0,1,0)
-
-    else:
-        normal = (0,0,1)
-
-    upper_clip = upper.clip(
-        normal=normal,
-        origin=origin,
-        invert=False
-    )
-
-    lower_clip = lower.clip(
-        normal=normal,
-        origin=origin,
-        invert=False
-    )
-
-    plotter.clear()
-
-    plotter.set_background(background)
-
-    if show_axes:
-        plotter.show_axes()
-
-    if show_grid:
-        plotter.show_grid()
-
-    plotter.add_mesh(
-        upper_clip,
-        cmap=surface_colour,
-        opacity=opacity,
-        smooth_shading=True,
-        show_edges=wireframe
-    )
-
-    plotter.add_mesh(
-        lower_clip,
-        cmap=surface_colour,
-        opacity=opacity,
-        smooth_shading=True,
-        show_edges=wireframe
-    )
-
-########################################################
-# CAMERA POSITION
-########################################################
-
-angle = np.radians(camera_angle)
-
-cam_x = camera_distance*np.cos(angle)
-cam_y = camera_distance*np.sin(angle)
-cam_z = camera_height
-
-plotter.camera.position = (
-    cam_x,
-    cam_y,
-    cam_z
-)
-
-plotter.camera.focal_point = (
-    0,
-    0,
-    0
-)
-
-plotter.camera.up = (
-    0,
-    0,
-    1
-)
-
-########################################################
-# AUTO ORBIT
-########################################################
-
-if orbit:
-
-    new_angle = np.radians(
-        camera_angle + orbit_speed
-    )
-
-    plotter.camera.position = (
-
-        camera_distance*np.cos(new_angle),
-
-        camera_distance*np.sin(new_angle),
-
-        camera_height
+        intensity=1.5
 
     )
 
-########################################################
-# RENDER EFFECTS
-########################################################
+)
 
-plotter.enable_anti_aliasing()
 
-plotter.enable_eye_dome_lighting()
 
-plotter.enable_parallel_projection(False)
+############################################################
+# CAMERA SETUP
+############################################################
 
-########################################################
-# DISPLAY VIEWER
-########################################################
+plotter.camera_position = [
+
+    (30,30,20),   # camera location
+
+    (0,0,0),      # focus point
+
+    (0,0,1)       # up direction
+
+]
+
+
+
+# Streamlit Cloud compatible projection
+
+try:
+
+    plotter.enable_parallel_projection(False)
+
+except Exception:
+
+    pass
+
+
+
+############################################################
+# AXES
+############################################################
+
+plotter.show_axes()
+
+
+
+############################################################
+# BACKGROUND
+############################################################
+
+plotter.set_background(
+
+    "black"
+
+)
+
+
+
+############################################################
+# DISPLAY
+############################################################
+
+
+st.subheader(
+    "3D Simulation"
+)
+
 
 stpyvista(
+
     plotter,
+
     key="wormhole_viewer"
+
 )
 
-########################################################
-# INFORMATION PANEL
-########################################################
 
-st.divider()
 
-c1,c2,c3,c4 = st.columns(4)
+############################################################
+# METRICS
+############################################################
 
-with c1:
-    st.metric(
-        "Mass",
-        f"{mass:.2f}"
-    )
 
-with c2:
-    st.metric(
-        "Schwarzschild Radius",
-        f"{rs:.2f}"
-    )
-
-with c3:
-    st.metric(
-        "Resolution",
-        resolution
-    )
-
-with c4:
-    st.metric(
-        "Vertices",
-        f"{resolution*resolution:,}"
-    )
-
-########################################################
-# LIVE COORDINATES
-########################################################
-
-st.subheader("Current Camera")
-
-st.write(
-    {
-        "x":round(cam_x,2),
-        "y":round(cam_y,2),
-        "z":round(cam_z,2)
-    }
+st.subheader(
+    "Simulation Metrics"
 )
 
-########################################################
-# EXPORT PLACEHOLDER
-########################################################
 
-if st.button("Export Screenshot"):
+metric_data = throat_metrics(
 
-    st.info(
-        "Screenshot export will be implemented in the next version."
+    throat_radius,
+
+    curvature=1/throat_radius
+
+)
+
+
+
+col1,col2,col3 = st.columns(3)
+
+
+
+with col1:
+
+    st.metric(
+
+        "Throat Radius",
+
+        f"{metric_data['throat_radius']:.2f}"
+
     )
 
-########################################################
-# ABOUT
-########################################################
 
-with st.expander("About this Explorer"):
 
-    st.markdown("""
+with col2:
 
-This explorer renders an **Einstein-Rosen Bridge**
-using PyVista and VTK.
+    st.metric(
 
-Features
+        "Curvature",
 
-- Interactive GPU rendering
-- True 3D geometry
-- Orbit camera
-- Clipping planes
-- Event horizon
+        f"{metric_data['curvature']:.3f}"
+
+    )
+
+
+
+with col3:
+
+    st.metric(
+
+        "Geometry",
+
+        "Einstein-Rosen"
+
+    )
+
+
+
+############################################################
+# EXPORT HOOK
+############################################################
+
+st.subheader(
+    "Export"
+)
+
+
+if st.button(
+    "Save Screenshot"
+):
+
+    try:
+
+        plotter.screenshot(
+
+            "wormhole_simulation.png"
+
+        )
+
+
+        st.success(
+
+            "Screenshot saved"
+
+        )
+
+
+    except Exception as e:
+
+        st.warning(
+
+            "Screenshot unavailable on cloud renderer"
+
+        )
+
+
+
+############################################################
+# INFORMATION
+############################################################
+
+st.markdown(
+"""
+### About this simulation
+
+This viewer generates the wormhole procedurally.
+
+No image textures are used.
+
+The geometry is calculated from mathematical
+spacetime models and rendered as a real 3D object.
+
+Included:
+
+- Einstein-Rosen bridge surface
+- Event horizon visualization
 - Procedural star field
-- Adjustable geometry
-- Smooth lighting
-- Scientific visualization
-
-Future versions will include
-
-- Photon trajectories
-
-- Geodesics
-
-- Fly-through animation
-
-- Curvature heat map
-
-- Gravitational lensing
-
-- White hole mode
-
-- Morris-Thorne comparison
-
-- Spacecraft simulation
-
-""")
-    plotter.add_light(light2)
+- Interactive camera
+- Spatial slicing
+"""
+)
