@@ -1,0 +1,32 @@
+{
+    "General Relativity": [
+        {
+            "title": "The Foundation of the General Theory of Relativity",
+            "author": "Albert Einstein",
+            "year": 1916
+        }
+    ],
+
+    "Wormholes": [
+        {
+            "title": "Einstein-Rosen Bridge",
+            "authors": [
+                "Albert Einstein",
+                "Nathan Rosen"
+            ],
+            "year": 1935
+        },
+        {
+            "title": "Lorentzian Wormholes",
+            "author": "Michael Morris and Kip Thorne",
+            "year": 1988
+        }
+    ],
+
+    "Black Holes": [
+        {
+            "title": "Black Hole Physics",
+            "topic": "Schwarzschild and Kerr metrics"
+        }
+    ]
+}
