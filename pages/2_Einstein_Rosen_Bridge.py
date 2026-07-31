@@ -1,241 +1,224 @@
+"""
+2_Einstein_Rosen_Bridge.py
+
+Interactive Einstein-Rosen Bridge page.
+"""
+
 import streamlit as st
+import numpy as np
 
 from utils.plotting import create_bridge
+from utils.metrics import schwarzschild_radius
+
+
 
 st.set_page_config(
+
     page_title="Einstein-Rosen Bridge",
+
+    page_icon="🌌",
+
     layout="wide"
+
 )
 
-st.title("🌌 Einstein-Rosen Bridge Explorer")
 
-st.markdown("""
-Interactively explore the geometry of an Einstein-Rosen Bridge.
 
-Rotate, zoom, slice and inspect the wormhole in real time.
-""")
+st.title(
+    "🌌 Einstein-Rosen Bridge"
+)
 
-##################################################
-# Sidebar
-##################################################
 
-st.sidebar.header("Physics")
+st.write(
+"""
+Explore the geometry of the Einstein-Rosen Bridge.
 
-mass = st.sidebar.slider(
-    "Black Hole Mass",
-    min_value=1.0,
-    max_value=20.0,
+The bridge is generated mathematically using a
+3D embedding surface, not a static image.
+"""
+)
+
+
+
+############################################################
+# SIDEBAR PARAMETERS
+############################################################
+
+st.sidebar.header(
+    "Bridge Parameters"
+)
+
+
+throat_radius = st.sidebar.slider(
+
+    "Throat Radius",
+
+    min_value=0.5,
+
+    max_value=10.0,
+
     value=2.0,
-    step=0.1
-)
 
-##################################################
-
-st.sidebar.header("Camera")
-
-camera_distance = st.sidebar.slider(
-    "Camera Distance",
-    2.0,
-    10.0,
-    4.0,
-    0.1
-)
-
-camera_elevation = st.sidebar.slider(
-    "Elevation",
-    -90,
-    90,
-    30
-)
-
-camera_azimuth = st.sidebar.slider(
-    "Azimuth",
-    0,
-    360,
-    45
-)
-
-##################################################
-
-st.sidebar.header("Appearance")
-
-opacity = st.sidebar.slider(
-    "Opacity",
-    0.2,
-    1.0,
-    1.0,
-    0.05
-)
-
-colorscale = st.sidebar.selectbox(
-    "Colour Map",
-    [
-        "Viridis",
-        "Plasma",
-        "Turbo",
-        "Inferno",
-        "Cividis",
-        "IceFire"
-    ]
-)
-
-wireframe = st.sidebar.checkbox(
-    "Wireframe",
-    False
-)
-
-show_axes = st.sidebar.checkbox(
-    "Show Axes",
-    True
-)
-
-##################################################
-
-st.sidebar.header("Cross Section")
-
-slice_type = st.sidebar.selectbox(
-
-    "Slice Type",
-
-    [
-
-        "None",
-
-        "Horizontal",
-
-        "Vertical X",
-
-        "Vertical Y",
-
-        "Cylinder",
-
-        "Wedge"
-
-    ]
+    step=0.5
 
 )
 
-slice_value = st.sidebar.slider(
 
-    "Slice Position",
 
-    -10.0,
+length = st.sidebar.slider(
 
-    10.0,
+    "Bridge Length",
 
-    0.0,
+    min_value=5,
 
-    0.1
+    max_value=30,
+
+    value=10
 
 )
 
-##################################################
 
-st.sidebar.header("Animation")
 
-auto_rotate = st.sidebar.checkbox(
-    "Auto Rotate",
-    False
+resolution = st.sidebar.slider(
+
+    "Mesh Resolution",
+
+    min_value=50,
+
+    max_value=300,
+
+    value=150
+
 )
 
-rotation_speed = st.sidebar.slider(
-    "Rotation Speed",
-    1,
-    10,
-    3
+
+
+############################################################
+# MASS CALCULATOR
+############################################################
+
+mass = st.sidebar.number_input(
+
+    "Black Hole Mass (Solar Masses)",
+
+    min_value=0.1,
+
+    value=1.0
+
 )
 
-##################################################
+
+
+rs = schwarzschild_radius(
+
+    mass
+
+)
+
+
+
+st.sidebar.metric(
+
+    "Schwarzschild Radius (m)",
+
+    f"{rs:.3e}"
+
+)
+
+
+
+############################################################
+# CREATE 3D BRIDGE
+############################################################
+
 
 fig = create_bridge(
 
-    mass=mass,
+    throat_radius=throat_radius,
 
-    distance=camera_distance,
+    length=length,
 
-    elevation=camera_elevation,
+    resolution=resolution,
 
-    azimuth=camera_azimuth,
-
-    opacity=opacity,
-
-    colorscale=colorscale,
-
-    wireframe=wireframe,
-
-    show_axes=show_axes,
-
-    slice_type=slice_type,
-
-    slice_value=slice_value,
-
-    auto_rotate=auto_rotate,
-
-    rotation_speed=rotation_speed
+    mass=mass
 
 )
+
+
 
 st.plotly_chart(
+
     fig,
-    use_container_width=True,
-    config={
-        "displaylogo": False,
-        "scrollZoom": True
-    }
+
+    use_container_width=True
+
 )
 
-##################################################
 
-col1, col2, col3 = st.columns(3)
+
+############################################################
+# PHYSICS INFORMATION
+############################################################
+
+
+col1,col2,col3 = st.columns(3)
+
 
 with col1:
+
     st.metric(
-        "Mass",
-        f"{mass:.2f}"
+
+        "Throat Radius",
+
+        f"{throat_radius}"
+
     )
+
 
 with col2:
+
     st.metric(
-        "Schwarzschild Radius",
-        f"{2*mass:.2f}"
+
+        "Grid Resolution",
+
+        resolution
+
     )
+
 
 with col3:
+
     st.metric(
-        "Slice",
-        slice_type
+
+        "Model",
+
+        "Einstein-Rosen"
+
     )
 
-##################################################
 
-with st.expander("About Einstein-Rosen Bridges"):
 
-    st.markdown("""
+st.subheader(
+    "Physics Notes"
+)
 
-An Einstein-Rosen Bridge is a solution of Einstein's field equations
-connecting two asymptotically flat regions of spacetime.
 
-This application visualizes the embedding surface of the
-Schwarzschild geometry.
+st.markdown(
+"""
+### Einstein-Rosen Bridge
 
-Features include:
+The Einstein-Rosen bridge comes from the maximally extended
+Schwarzschild solution of General Relativity.
 
-- Interactive 3D rotation
-- Live slicing
-- Adjustable black hole mass
-- Camera control
-- Wireframe mode
-- Multiple colour maps
-- Real-time rendering
+It represents a mathematical connection between two
+regions of spacetime.
 
-Future versions will include:
+Important:
 
-- Particle trajectories
-- Photon geodesics
-- Fly-through animation
-- Morris-Thorne comparison
-- Curvature heat maps
-- Gravitational lensing
-- Event horizon rendering
+- It is a theoretical solution.
+- It is not a traversable wormhole.
+- The throat collapses too quickly for passage.
 
-""")
+The visualization above shows the spatial embedding geometry.
+"""
+)
