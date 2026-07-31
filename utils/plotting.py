@@ -3,11 +3,7 @@ plotting.py
 
 Visualization utilities for Einstein-Rosen Bridge Explorer.
 
-Contains:
-- Einstein-Rosen bridge plots
-- Wormhole surfaces
-- Embedding plots
-- General 3D helpers
+Uses Plotly for Streamlit rendering.
 """
 
 import numpy as np
@@ -22,45 +18,83 @@ import plotly.graph_objects as go
 def create_bridge(
         throat_radius=2,
         length=10,
-        resolution=200
+        resolution=200,
+        mass=None,
+        **kwargs
 ):
     """
-    Create Einstein-Rosen Bridge 3D visualization.
+    Create Einstein-Rosen Bridge 3D surface.
 
-    Returns Plotly Figure.
+    Parameters
+    ----------
+    throat_radius:
+        Wormhole throat size
+
+    length:
+        Length of bridge along z-axis
+
+    resolution:
+        Mesh resolution
+
+    mass:
+        Optional black hole mass parameter
+
+    Returns
+    -------
+    Plotly Figure
     """
 
 
     u = np.linspace(
+
         -length,
+
         length,
+
         resolution
+
     )
 
 
     theta = np.linspace(
+
         0,
+
         2*np.pi,
+
         resolution
+
     )
 
 
     U, T = np.meshgrid(
+
         u,
+
         theta
+
     )
 
 
-    # bridge radius profile
-    R = throat_radius + U**2
+    ########################################################
+    # Einstein-Rosen geometry
+    ########################################################
 
 
-    X = R*np.cos(T)
+    R = throat_radius + np.abs(U)**2
 
-    Y = R*np.sin(T)
+
+    X = R * np.cos(T)
+
+    Y = R * np.sin(T)
 
     Z = U
 
+
+
+    ########################################################
+    # Plotly surface
+    ########################################################
 
 
     fig = go.Figure(
@@ -77,7 +111,7 @@ def create_bridge(
 
                 colorscale="Viridis",
 
-                opacity=0.9,
+                opacity=0.95,
 
                 showscale=False
 
@@ -88,17 +122,18 @@ def create_bridge(
     )
 
 
+
     fig.update_layout(
 
         title="Einstein-Rosen Bridge",
 
         scene=dict(
 
-            xaxis_title="X",
+            xaxis_title="Spatial X",
 
-            yaxis_title="Y",
+            yaxis_title="Spatial Y",
 
-            zaxis_title="Z",
+            zaxis_title="Spatial Z",
 
             aspectmode="data"
 
@@ -123,8 +158,10 @@ def create_bridge(
 
 
 
+
+
 ############################################################
-# GENERIC SURFACE PLOT
+# GENERIC SURFACE
 ############################################################
 
 def surface_plot(
@@ -133,9 +170,6 @@ def surface_plot(
         Z,
         title="3D Surface"
 ):
-    """
-    Plot any 3D surface.
-    """
 
 
     fig = go.Figure(
@@ -176,8 +210,10 @@ def surface_plot(
 
 
 
+
+
 ############################################################
-# SCATTER 3D
+# 3D SCATTER
 ############################################################
 
 def scatter_3d(
@@ -186,9 +222,6 @@ def scatter_3d(
         z,
         title="3D Scatter"
 ):
-    """
-    Plot particles or trajectories.
-    """
 
 
     fig = go.Figure(
@@ -235,6 +268,8 @@ def scatter_3d(
 
 
 
+
+
 ############################################################
 # TRAJECTORY PLOT
 ############################################################
@@ -245,9 +280,6 @@ def trajectory_plot(
         z,
         title="Trajectory"
 ):
-    """
-    Plot particle path.
-    """
 
 
     fig = go.Figure(
@@ -262,7 +294,13 @@ def trajectory_plot(
 
                 z=z,
 
-                mode="lines"
+                mode="lines",
+
+                line=dict(
+
+                    width=5
+
+                )
 
             )
 
@@ -288,6 +326,8 @@ def trajectory_plot(
 
 
 
+
+
 ############################################################
 # EVENT HORIZON SPHERE
 ############################################################
@@ -296,12 +336,9 @@ def black_hole_sphere(
         radius=2,
         resolution=100
 ):
-    """
-    Create event horizon sphere.
-    """
 
 
-    phi=np.linspace(
+    phi = np.linspace(
 
         0,
 
@@ -312,7 +349,7 @@ def black_hole_sphere(
     )
 
 
-    theta=np.linspace(
+    theta = np.linspace(
 
         0,
 
@@ -323,7 +360,7 @@ def black_hole_sphere(
     )
 
 
-    P,T=np.meshgrid(
+    P,T = np.meshgrid(
 
         phi,
 
@@ -332,11 +369,11 @@ def black_hole_sphere(
     )
 
 
-    X=radius*np.sin(P)*np.cos(T)
+    X = radius*np.sin(P)*np.cos(T)
 
-    Y=radius*np.sin(P)*np.sin(T)
+    Y = radius*np.sin(P)*np.sin(T)
 
-    Z=radius*np.cos(P)
+    Z = radius*np.cos(P)
 
 
 
@@ -351,3 +388,114 @@ def black_hole_sphere(
         "Event Horizon"
 
     )
+
+
+
+
+
+############################################################
+# EMBEDDING DIAGRAM
+############################################################
+
+def embedding_plot(
+        r,
+        z,
+        title="Embedding Diagram"
+):
+
+
+    theta=np.linspace(
+
+        0,
+
+        2*np.pi,
+
+        len(r)
+
+    )
+
+
+    R,T=np.meshgrid(
+
+        r,
+
+        theta
+
+    )
+
+
+    Z=np.tile(
+
+        z,
+
+        (
+
+            len(theta),
+
+            1
+
+        )
+
+    )
+
+
+    X=R*np.cos(T)
+
+    Y=R*np.sin(T)
+
+
+
+    return surface_plot(
+
+        X,
+
+        Y,
+
+        Z,
+
+        title
+
+    )
+
+
+
+
+
+############################################################
+# ADD STAR FIELD
+############################################################
+
+def add_stars(
+        fig,
+        stars
+):
+
+
+    fig.add_trace(
+
+        go.Scatter3d(
+
+            x=stars["x"],
+
+            y=stars["y"],
+
+            z=stars["z"],
+
+            mode="markers",
+
+            marker=dict(
+
+                size=2,
+
+                opacity=0.8
+
+            ),
+
+            name="Stars"
+
+        )
+
+    )
+
+
+    return fig
