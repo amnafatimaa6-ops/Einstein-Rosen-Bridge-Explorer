@@ -1,0 +1,6 @@
+name,value,unit,description
+speed_of_light,299792458,m/s,Speed of light
+gravitational_constant,6.67430e-11,m3/kg/s2,Newton gravitational constant
+solar_mass,1.98847e30,kg,Solar mass
+planck_constant,6.62607015e-34,J.s,Planck constant
+boltzmann_constant,1.380649e-23,J/K,Boltzmann constant
