@@ -1,7 +1,12 @@
 streamlit
-plotly
 numpy
 scipy
+plotly
 matplotlib
 sympy
 pandas
+
+pyvista
+pyvistaqt
+stpyvista
+vtk
