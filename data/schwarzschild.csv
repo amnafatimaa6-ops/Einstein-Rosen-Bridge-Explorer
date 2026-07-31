@@ -1,0 +1,6 @@
+parameter,equation,description
+event_horizon,r=2GM/c²,Schwarzschild radius
+photon_sphere,r=3GM/c²,Photon orbit radius
+ISCO,r=6GM/c²,Innermost stable circular orbit
+time_dilation,sqrt(1-rs/r),Gravitational time dilation
+redshift,1/sqrt(1-rs/r)-1,Gravitational redshift
