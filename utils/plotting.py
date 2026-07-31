@@ -1,334 +1,353 @@
 """
 plotting.py
 
-Interactive Plotly visualization utilities for the
-Einstein-Rosen Bridge Explorer.
+Visualization utilities for Einstein-Rosen Bridge Explorer.
+
+Contains:
+- Einstein-Rosen bridge plots
+- Wormhole surfaces
+- Embedding plots
+- General 3D helpers
 """
 
 import numpy as np
 import plotly.graph_objects as go
 
-from utils.geometry import einstein_rosen_bridge
-from utils.camera import camera_position
-
-from utils.slicing import (
-    horizontal_slice,
-    vertical_slice_x,
-    vertical_slice_y,
-    cylindrical_slice,
-    wedge_slice
-)
 
 
-def apply_slice(
-        X,
-        Y,
-        Z,
-        slice_type,
-        slice_value):
-
-    if slice_type == "Horizontal":
-        return horizontal_slice(
-            X,
-            Y,
-            Z,
-            slice_value
-        )
-
-    if slice_type == "Vertical X":
-        return vertical_slice_x(
-            X,
-            Y,
-            Z,
-            slice_value
-        )
-
-    if slice_type == "Vertical Y":
-        return vertical_slice_y(
-            X,
-            Y,
-            Z,
-            slice_value
-        )
-
-    if slice_type == "Cylinder":
-        return cylindrical_slice(
-            X,
-            Y,
-            Z,
-            abs(slice_value)
-        )
-
-    if slice_type == "Wedge":
-        return wedge_slice(
-            X,
-            Y,
-            Z,
-            slice_value * 12
-        )
-
-    return X, Y, Z
-
-
-def add_surface(
-        fig,
-        X,
-        Y,
-        Z,
-        opacity,
-        colorscale):
-
-    fig.add_surface(
-
-        x=X,
-        y=Y,
-        z=Z,
-
-        opacity=opacity,
-
-        colorscale=colorscale,
-
-        showscale=False,
-
-        hovertemplate=
-        "<b>X</b>: %{x:.2f}<br>"
-        "<b>Y</b>: %{y:.2f}<br>"
-        "<b>Z</b>: %{z:.2f}<extra></extra>"
-
-    )
-
-
-def add_wireframe(
-        fig,
-        X,
-        Y,
-        Z):
-
-    step = 8
-
-    for i in range(0, X.shape[0], step):
-
-        fig.add_trace(
-
-            go.Scatter3d(
-
-                x=X[i],
-
-                y=Y[i],
-
-                z=Z[i],
-
-                mode="lines",
-
-                line=dict(
-                    width=2,
-                    color="white"
-                ),
-
-                showlegend=False
-
-            )
-
-        )
-
-    for j in range(0, X.shape[1], step):
-
-        fig.add_trace(
-
-            go.Scatter3d(
-
-                x=X[:, j],
-
-                y=Y[:, j],
-
-                z=Z[:, j],
-
-                mode="lines",
-
-                line=dict(
-                    width=2,
-                    color="white"
-                ),
-
-                showlegend=False
-
-            )
-
-        )
-
-
-def add_event_horizon(
-        fig,
-        mass):
-
-    rs = 2 * mass
-
-    u = np.linspace(0, np.pi, 40)
-
-    v = np.linspace(0, 2 * np.pi, 40)
-
-    u, v = np.meshgrid(u, v)
-
-    x = rs * np.sin(u) * np.cos(v)
-    y = rs * np.sin(u) * np.sin(v)
-    z = rs * np.cos(u)
-
-    fig.add_surface(
-
-        x=x,
-
-        y=y,
-
-        z=z,
-
-        opacity=0.30,
-
-        colorscale="Reds",
-
-        showscale=False
-
-    )
-
+############################################################
+# EINSTEIN-ROSEN BRIDGE
+############################################################
 
 def create_bridge(
-
-        mass,
-
-        distance,
-
-        elevation,
-
-        azimuth,
-
-        opacity,
-
-        colorscale,
-
-        wireframe,
-
-        show_axes,
-
-        slice_type,
-
-        slice_value,
-
-        auto_rotate,
-
-        rotation_speed
-
+        throat_radius=2,
+        length=10,
+        resolution=200
 ):
+    """
+    Create Einstein-Rosen Bridge 3D visualization.
 
-    X, Y, Z = einstein_rosen_bridge(mass)
+    Returns Plotly Figure.
+    """
 
-    X, Y, Z = apply_slice(
 
-        X,
-        Y,
-        Z,
+    u = np.linspace(
+        -length,
+        length,
+        resolution
+    )
 
-        slice_type,
 
-        slice_value
+    theta = np.linspace(
+        0,
+        2*np.pi,
+        resolution
+    )
+
+
+    U, T = np.meshgrid(
+        u,
+        theta
+    )
+
+
+    # bridge radius profile
+    R = throat_radius + U**2
+
+
+    X = R*np.cos(T)
+
+    Y = R*np.sin(T)
+
+    Z = U
+
+
+
+    fig = go.Figure(
+
+        data=[
+
+            go.Surface(
+
+                x=X,
+
+                y=Y,
+
+                z=Z,
+
+                colorscale="Viridis",
+
+                opacity=0.9,
+
+                showscale=False
+
+            )
+
+        ]
 
     )
 
-    fig = go.Figure()
-
-    add_surface(
-
-        fig,
-
-        X,
-
-        Y,
-
-        Z,
-
-        opacity,
-
-        colorscale
-
-    )
-
-    add_surface(
-
-        fig,
-
-        X,
-
-        Y,
-
-        -Z,
-
-        opacity,
-
-        colorscale
-
-    )
-
-    if wireframe:
-
-        add_wireframe(
-
-            fig,
-
-            X,
-
-            Y,
-
-            Z
-
-        )
-
-        add_wireframe(
-
-            fig,
-
-            X,
-
-            Y,
-
-            -Z
-
-        )
-
-    add_event_horizon(
-
-        fig,
-
-        mass
-
-    )
-
-    if auto_rotate:
-
-        azimuth += rotation_speed
 
     fig.update_layout(
 
         title="Einstein-Rosen Bridge",
 
-        paper_bgcolor="black",
+        scene=dict(
 
-        plot_bgcolor="black",
+            xaxis_title="X",
+
+            yaxis_title="Y",
+
+            zaxis_title="Z",
+
+            aspectmode="data"
+
+        ),
 
         margin=dict(
+
             l=0,
+
             r=0,
+
             b=0,
-            t=45
-        ),
+
+            t=40
+
+        )
+
+    )
+
+
+    return fig
+
+
+
+############################################################
+# GENERIC SURFACE PLOT
+############################################################
+
+def surface_plot(
+        X,
+        Y,
+        Z,
+        title="3D Surface"
+):
+    """
+    Plot any 3D surface.
+    """
+
+
+    fig = go.Figure(
+
+        data=[
+
+            go.Surface(
+
+                x=X,
+
+                y=Y,
+
+                z=Z,
+
+                colorscale="Viridis"
+
+            )
+
+        ]
+
+    )
+
+
+    fig.update_layout(
+
+        title=title,
 
         scene=dict(
 
-            aspectmode="data",
+            aspectmode="data"
 
-            camera=camera_position(
+        )
 
-                distance,
+    )
 
-                elevation,
 
-                azimuth
+    return fig
 
-            ),
+
+
+############################################################
+# SCATTER 3D
+############################################################
+
+def scatter_3d(
+        x,
+        y,
+        z,
+        title="3D Scatter"
+):
+    """
+    Plot particles or trajectories.
+    """
+
+
+    fig = go.Figure(
+
+        data=[
+
+            go.Scatter3d(
+
+                x=x,
+
+                y=y,
+
+                z=z,
+
+                mode="markers",
+
+                marker=dict(
+
+                    size=3
+
+                )
+
+            )
+
+        ]
+
+    )
+
+
+    fig.update_layout(
+
+        title=title,
+
+        scene=dict(
+
+            aspectmode="data"
+
+        )
+
+    )
+
+
+    return fig
+
+
+
+############################################################
+# TRAJECTORY PLOT
+############################################################
+
+def trajectory_plot(
+        x,
+        y,
+        z,
+        title="Trajectory"
+):
+    """
+    Plot particle path.
+    """
+
+
+    fig = go.Figure(
+
+        data=[
+
+            go.Scatter3d(
+
+                x=x,
+
+                y=y,
+
+                z=z,
+
+                mode="lines"
+
+            )
+
+        ]
+
+    )
+
+
+    fig.update_layout(
+
+        title=title,
+
+        scene=dict(
+
+            aspectmode="data"
+
+        )
+
+    )
+
+
+    return fig
+
+
+
+############################################################
+# EVENT HORIZON SPHERE
+############################################################
+
+def black_hole_sphere(
+        radius=2,
+        resolution=100
+):
+    """
+    Create event horizon sphere.
+    """
+
+
+    phi=np.linspace(
+
+        0,
+
+        np.pi,
+
+        resolution
+
+    )
+
+
+    theta=np.linspace(
+
+        0,
+
+        2*np.pi,
+
+        resolution
+
+    )
+
+
+    P,T=np.meshgrid(
+
+        phi,
+
+        theta
+
+    )
+
+
+    X=radius*np.sin(P)*np.cos(T)
+
+    Y=radius*np.sin(P)*np.sin(T)
+
+    Z=radius*np.cos(P)
+
+
+
+    return surface_plot(
+
+        X,
+
+        Y,
+
+        Z,
+
+        "Event Horizon"
+
+    )
