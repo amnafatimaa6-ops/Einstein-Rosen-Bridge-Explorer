@@ -1,27 +1,97 @@
+"""
+Einstein-Rosen Bridge Explorer
+
+Main Streamlit application.
+"""
+
 import streamlit as st
 
+
 st.set_page_config(
+
     page_title="Einstein-Rosen Bridge Explorer",
+
     page_icon="🌌",
-    layout="wide",
-    initial_sidebar_state="expanded"
+
+    layout="wide"
+
 )
 
-st.title("🌌 Einstein-Rosen Bridge Explorer")
 
-st.markdown("""
-Welcome to the **Einstein-Rosen Bridge Explorer**.
 
-This application allows you to:
+st.title(
+    "🌌 Einstein-Rosen Bridge Explorer"
+)
 
-- 🌌 Explore Einstein-Rosen Bridges
-- 🌀 Compare Morris-Thorne Wormholes
-- 📈 View Embedding Diagrams
-- 🛰 Fly Around in 3D
-- 📐 Study the Mathematics
-- ⚖ Compare Different Wormhole Geometries
 
-Use the sidebar to navigate.
-""")
+st.markdown(
+"""
+## Interactive General Relativity Laboratory
 
-st.info("Select a page from the sidebar.")
+Explore:
+
+- Einstein-Rosen bridges
+- Morris-Thorne wormholes
+- Black holes
+- Event horizons
+- Gravitational lensing
+- Geodesics
+- Spacetime curvature
+
+Use the sidebar pages to begin.
+"""
+)
+
+
+
+col1,col2,col3=st.columns(3)
+
+
+with col1:
+
+    st.metric(
+
+        "Models",
+
+        "10+"
+
+    )
+
+
+with col2:
+
+    st.metric(
+
+        "3D Engine",
+
+        "PyVista"
+
+    )
+
+
+with col3:
+
+    st.metric(
+
+        "Physics",
+
+        "General Relativity"
+
+    )
+
+
+
+st.info(
+"""
+Navigate through the pages:
+
+1. Einstein-Rosen Bridge
+2. Morris-Thorne Wormhole
+3. Embedding Diagrams
+4. 3D Explorer
+5. Geodesics
+6. Event Horizon
+7. Gravitational Lensing
+
+"""
+)
